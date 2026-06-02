@@ -1,185 +1,183 @@
 package com.and2long.applist
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.content.pm.Signature
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.RecyclerView
-import com.and2long.applist.databinding.ActivityMainBinding
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import com.and2long.applist.ui.AppFilter
+import com.and2long.applist.ui.AppListScreen
+import com.and2long.applist.ui.AppListTheme
+import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+class MainActivity : ComponentActivity() {
 
-class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
-
-    private lateinit var binding: ActivityMainBinding
-
-    companion object {
-        const val TYPE_USER = 0
-        const val TYPE_SYSTEM = 1
-    }
-
-    private val TAG = this.javaClass.simpleName
-
-    private lateinit var appAdapter: AppAdapter
-    private val mData = mutableListOf<AppInfo>()
-
-    private var type = TYPE_USER
+    private var refreshToken by mutableIntStateOf(0)
+    private val tag = this.javaClass.simpleName
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        binding.toolBar.title = ""
-        setSupportActionBar(binding.toolBar)
-
-        val spinnerAdapter = ArrayAdapter.createFromResource(
-            this, R.array.options_main, android.R.layout.simple_spinner_dropdown_item
-        )
-        binding.spinner.adapter = spinnerAdapter
-        binding.spinner.onItemSelectedListener = this
-
-        appAdapter = AppAdapter(mData)
-        binding.appList.adapter = appAdapter
-        binding.appList.addItemDecoration(DividerItemDecoration(this, RecyclerView.VERTICAL))
-        appAdapter.setOnItemClickListener(object : OnItemClickListener {
-            override fun onItemClick(view: View, position: Int) {
-                val appInfo = mData[position]
-                AlertDialog.Builder(this@MainActivity)
-                    .setIcon(appInfo.appIcon)
-                    .setTitle(appInfo.appName)
-                    .setMessage("PackageName: " + appInfo.packageName + "\n\n" + "VersionName: " + appInfo.versionName + "\n\nVersionCode: " + appInfo.versionCode)
-                    .setPositiveButton("OPEN") { dialog, _ ->
-                        dialog?.dismiss()
-                        packageManager.getLaunchIntentForPackage(appInfo.packageName)?.let(::startActivity)
-                    }
-                    .setNegativeButton("DETAIL") { dialog, _ ->
-                        dialog?.dismiss()
-                        goToAppDetail(mData[position].packageName)
-                    }
-                    .setNeutralButton("CANCEL") { dialog, _ -> dialog?.dismiss() }
-                    .show()
+        setContent {
+            AppListTheme {
+                AppListScreen(
+                    refreshToken = refreshToken,
+                    onRefresh = { refreshToken++ },
+                    onLoadApps = ::loadApps,
+                    onOpenApp = ::openApp,
+                    onOpenDetail = ::goToAppDetail
+                )
             }
-        })
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        showApps()
+        refreshToken++
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        lifecycleScope.cancel()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.i_refresh -> showApps()
-        }
-        return true
-    }
-
-
-    override fun onNothingSelected(parent: AdapterView<*>?) {
-        Log.i(TAG, "nothing select")
-    }
-
-    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        type = position
-        showApps()
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    private fun showApps() {
-        binding.pb.visibility = View.VISIBLE
-        lifecycleScope.launch {
-            val appInfoList = withContext(Dispatchers.IO) {
-                val result = mutableListOf<AppInfo>()
-                try {
-                    val packageInfoList = packageManager.getInstalledPackages(0)
-                    val temp = when (type) {
-                        TYPE_SYSTEM -> {
-                            packageInfoList.filter {
-                                val applicationInfo = it.applicationInfo ?: return@filter false
-                                (ApplicationInfo.FLAG_SYSTEM and applicationInfo.flags) != 0
-                            }
-                        }
-
-                        TYPE_USER -> {
-                            packageInfoList.filter {
-                                val applicationInfo = it.applicationInfo ?: return@filter false
-                                (ApplicationInfo.FLAG_SYSTEM and applicationInfo.flags) == 0
-                            }
-                        }
-
-                        else -> {
-                            packageInfoList
+    private suspend fun loadApps(type: Int): List<AppInfo> {
+        return withContext(Dispatchers.IO) {
+            val result = mutableListOf<AppInfo>()
+            try {
+                val packageInfoList = packageManager.getInstalledPackages(0)
+                val filteredPackages = when (type) {
+                    AppFilter.SYSTEM -> {
+                        packageInfoList.filter {
+                            val applicationInfo = it.applicationInfo ?: return@filter false
+                            (ApplicationInfo.FLAG_SYSTEM and applicationInfo.flags) != 0
                         }
                     }
 
-                    temp.forEach {
-                        val applicationInfo = it.applicationInfo ?: return@forEach
-                        if (it.packageName != packageName) {
-                            val appInfo = AppInfo()
-                            appInfo.appName =
-                                packageManager.getApplicationLabel(applicationInfo).toString()
-                            appInfo.packageName = it.packageName
-                            appInfo.versionName = it.versionName.orEmpty()
-                            appInfo.versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                it.longVersionCode.toString()
-                            } else {
-                                @Suppress("DEPRECATION")
-                                it.versionCode.toString()
-                            }
-                            appInfo.appIcon = applicationInfo.loadIcon(packageManager)
-                            result.add(appInfo)
+                    AppFilter.USER -> {
+                        packageInfoList.filter {
+                            val applicationInfo = it.applicationInfo ?: return@filter false
+                            (ApplicationInfo.FLAG_SYSTEM and applicationInfo.flags) == 0
                         }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Log.e(TAG, "获取应用包信息失败")
+
+                    else -> {
+                        packageInfoList.filter {
+                            val applicationInfo = it.applicationInfo ?: return@filter false
+                            (ApplicationInfo.FLAG_SYSTEM and applicationInfo.flags) == 0
+                        }
+                    }
                 }
-                result.sortBy { it.appName }
-                result
+
+                filteredPackages.forEach {
+                    val applicationInfo = it.applicationInfo ?: return@forEach
+                    if (it.packageName != packageName) {
+                        val signatureDigests = signatureDigests(it.packageName)
+                        result.add(
+                            AppInfo(
+                                appName = packageManager.getApplicationLabel(applicationInfo).toString(),
+                                packageName = it.packageName,
+                                versionName = it.versionName.orEmpty(),
+                                versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                    it.longVersionCode.toString()
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    it.versionCode.toString()
+                                },
+                                minSdkVersion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    applicationInfo.minSdkVersion.toString()
+                                } else {
+                                    "-"
+                                },
+                                targetSdkVersion = applicationInfo.targetSdkVersion.toString(),
+                                signatureMd5 = signatureDigests.md5,
+                                signatureSha1 = signatureDigests.sha1,
+                                signatureSha256 = signatureDigests.sha256,
+                                appIcon = applicationInfo.loadIcon(packageManager)
+                            )
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.e(tag, "获取应用包信息失败")
             }
-            mData.clear()
-            mData.addAll(appInfoList)
-            appAdapter.notifyDataSetChanged()
-            binding.pb.visibility = View.GONE
+            result.sortBy { it.appName }
+            result
         }
+    }
+
+    private fun signatureDigests(packageName: String): SignatureDigests {
+        val signatures = getPackageSignatures(packageName)
+        if (signatures.isEmpty()) return SignatureDigests()
+
+        return SignatureDigests(
+            md5 = signatures.digest("MD5"),
+            sha1 = signatures.digest("SHA-1"),
+            sha256 = signatures.digest("SHA-256")
+        )
+    }
+
+    private fun Array<Signature>.digest(algorithm: String): String {
+        return joinToString(separator = "\n") { signature ->
+            MessageDigest.getInstance(algorithm)
+                .digest(signature.toByteArray())
+                .joinToString(separator = ":") { byte -> "%02X".format(byte.toInt() and 0xFF) }
+        }
+    }
+
+    private fun getPackageSignatures(packageName: String): Array<Signature> {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    packageManager.getPackageInfo(
+                        packageName,
+                        PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong())
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+                }
+                val signingInfo = packageInfo.signingInfo ?: return emptyArray()
+                if (signingInfo.hasMultipleSigners()) {
+                    signingInfo.apkContentsSigners
+                } else {
+                    signingInfo.signingCertificateHistory ?: signingInfo.apkContentsSigners
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES).signatures
+                    ?: emptyArray()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyArray()
+        }
+    }
+
+    private data class SignatureDigests(
+        val md5: String = "-",
+        val sha1: String = "-",
+        val sha256: String = "-"
+    )
+
+    private fun openApp(packageName: String) {
+        packageManager.getLaunchIntentForPackage(packageName)?.let(::startActivity)
     }
 
     private fun goToAppDetail(packageName: String) {
         try {
-            // 通过程序的包名创建URI
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            intent.data = Uri.parse("package:$packageName")
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
             startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
-
 }

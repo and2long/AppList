@@ -1,4 +1,18 @@
 <resources>
     <string name="app_name">AppList</string>
     <string name="refresh">Refresh</string>
+    <string name="package_name">Package Name</string>
+    <string name="version_name">Version Name</string>
+    <string name="version_code">Version Code</string>
+    <string name="min_sdk_version">Min SDK Version</string>
+    <string name="target_sdk_version">Target SDK Version</string>
+    <string name="signature">Signature</string>
+    <string name="md5">MD5</string>
+    <string name="sha1">SHA1</string>
+    <string name="sha256">SHA256</string>
+    <string name="user_apps">User</string>
+    <string name="system_apps">System</string>
+    <string name="open">Open</string>
+    <string name="system_detail">System Detail</string>
+    <string name="empty_apps">No apps found</string>
 </resources>
