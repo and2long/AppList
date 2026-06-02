@@ -35,7 +35,8 @@ class MainActivity : ComponentActivity() {
                     onRefresh = { refreshToken++ },
                     onLoadApps = ::loadApps,
                     onOpenApp = ::openApp,
-                    onOpenDetail = ::goToAppDetail
+                    onOpenDetail = ::goToAppDetail,
+                    onShareApp = ::shareAppInfo
                 )
             }
         }
@@ -179,5 +180,32 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun shareAppInfo(appInfo: AppInfo) {
+        val message = buildShareMessage(appInfo)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, message)
+            putExtra(Intent.EXTRA_SUBJECT, appInfo.appName)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.share)))
+    }
+
+    private fun buildShareMessage(appInfo: AppInfo): String {
+        return buildString {
+            appendLine(appInfo.appName)
+            appendLine()
+            appendLine("${getString(R.string.package_name)}: ${appInfo.packageName}")
+            appendLine("${getString(R.string.version_name)}: ${appInfo.versionName}")
+            appendLine("${getString(R.string.version_code)}: ${appInfo.versionCode}")
+            appendLine("${getString(R.string.min_sdk_version)}: ${appInfo.minSdkVersion}")
+            appendLine("${getString(R.string.target_sdk_version)}: ${appInfo.targetSdkVersion}")
+            appendLine()
+            appendLine(getString(R.string.signature))
+            appendLine("${getString(R.string.md5)}: ${appInfo.signatureMd5}")
+            appendLine("${getString(R.string.sha1)}: ${appInfo.signatureSha1}")
+            appendLine("${getString(R.string.sha256)}: ${appInfo.signatureSha256}")
+        }.trimEnd()
     }
 }

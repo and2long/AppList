@@ -14,5 +14,6 @@
     <string name="system_apps">System</string>
     <string name="open">Open</string>
     <string name="system_detail">System Detail</string>
+    <string name="share">Share</string>
     <string name="empty_apps">No apps found</string>
 </resources>

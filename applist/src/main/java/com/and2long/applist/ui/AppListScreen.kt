@@ -42,7 +42,8 @@ fun AppListScreen(
     onRefresh: () -> Unit,
     onLoadApps: suspend (Int) -> List<AppInfo>,
     onOpenApp: (String) -> Unit,
-    onOpenDetail: (String) -> Unit
+    onOpenDetail: (String) -> Unit,
+    onShareApp: (AppInfo) -> Unit
 ) {
     var selectedType by remember { mutableIntStateOf(AppFilter.USER) }
     var apps by remember { mutableStateOf(emptyList<AppInfo>()) }
@@ -54,7 +55,8 @@ fun AppListScreen(
             appInfo = appInfo,
             onBack = { selectedApp = null },
             onOpenApp = { onOpenApp(appInfo.packageName) },
-            onOpenSystemDetail = { onOpenDetail(appInfo.packageName) }
+            onOpenSystemDetail = { onOpenDetail(appInfo.packageName) },
+            onShare = { onShareApp(appInfo) }
         )
         return
     }

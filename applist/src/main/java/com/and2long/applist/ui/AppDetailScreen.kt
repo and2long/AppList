@@ -39,7 +39,8 @@ fun AppDetailScreen(
     appInfo: AppInfo,
     onBack: () -> Unit,
     onOpenApp: () -> Unit,
-    onOpenSystemDetail: () -> Unit
+    onOpenSystemDetail: () -> Unit,
+    onShare: () -> Unit
 ) {
     BackHandler(onBack = onBack)
 
@@ -108,6 +109,14 @@ fun AppDetailScreen(
             }
             item {
                 DetailLine(label = stringResource(R.string.sha256), value = appInfo.signatureSha256)
+            }
+            item {
+                TextButton(
+                    onClick = onShare,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = stringResource(R.string.share))
+                }
             }
         }
     }
