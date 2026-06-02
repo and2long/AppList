@@ -4,6 +4,8 @@
     <string name="package_name">Package Name</string>
     <string name="version_name">Version Name</string>
     <string name="version_code">Version Code</string>
+    <string name="first_install_time">First Install Time</string>
+    <string name="last_update_time">Last Update Time</string>
     <string name="min_sdk_version">Min SDK Version</string>
     <string name="target_sdk_version">Target SDK Version</string>
     <string name="signature">Signature</string>

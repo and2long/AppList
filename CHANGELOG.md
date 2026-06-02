@@ -1,10 +1,14 @@
+## [2.0.1+12] - 2026-06-02
+- Fix missing updated system apps in the user app list
+- Sort app lists by last update time in descending order
+
 ## [2.0.0+11] - 2026-06-02
-- 迁移项目到 Jetpack Compose
-- 适配 Java 21、Gradle 9 和 Android Gradle Plugin 9
-- 新增应用详情页，展示 minSdkVersion、targetSdkVersion 和签名 MD5/SHA1/SHA256
-- 新增详情信息分享功能
-- 支持简体中文和英文国际化
-- 优化 GitHub Actions 发布流程和版本升级记录解析
+- Migrate the project to Jetpack Compose
+- Support Java 21, Gradle 9, and Android Gradle Plugin 9
+- Add an app detail page with minSdkVersion, targetSdkVersion, and signature MD5/SHA1/SHA256
+- Add app detail sharing
+- Support Simplified Chinese and English localization
+- Improve the GitHub Actions release workflow and version changelog parsing
 
 ## [1.4.1+10] - 2023-03-30
 - Support for displaying versionCode.

@@ -7,6 +7,8 @@ data class AppInfo(
     var packageName: String = "",
     var versionName: String = "",
     var versionCode: String = "",
+    var firstInstallTime: String = "",
+    var lastUpdateTime: String = "",
     var minSdkVersion: String = "",
     var targetSdkVersion: String = "",
     var signatureMd5: String = "",

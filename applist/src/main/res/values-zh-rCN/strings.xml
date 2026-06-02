@@ -4,6 +4,8 @@
     <string name="package_name">包名</string>
     <string name="version_name">版本名称</string>
     <string name="version_code">版本号</string>
+    <string name="first_install_time">安装时间</string>
+    <string name="last_update_time">更新时间</string>
     <string name="min_sdk_version">最低 SDK 版本</string>
     <string name="target_sdk_version">目标 SDK 版本</string>
     <string name="signature">签名</string>
