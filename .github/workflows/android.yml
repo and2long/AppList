@@ -33,7 +33,7 @@ jobs:
     - name: Rename release APK
       run: |
         cp applist/build/outputs/apk/release/applist-release.apk \
-          "applist/build/outputs/apk/release/applist-release-${{ github.ref_name }}.apk"
+          "applist/build/outputs/apk/release/applist-${{ github.ref_name }}-release.apk"
 
     - name: Extract changelog
       if: startsWith(github.ref, 'refs/tags/')
@@ -68,5 +68,5 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         body_path: release-notes.md
-        files: "applist/build/outputs/apk/release/applist-release-${{ github.ref_name }}.apk"
+        files: "applist/build/outputs/apk/release/applist-${{ github.ref_name }}-release.apk"
         fail_on_unmatched_files: true
