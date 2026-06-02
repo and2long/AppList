@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">AppList</string>
+    <string name="refresh">刷新</string>
+    <string name="package_name">包名</string>
+    <string name="version_name">版本名称</string>
+    <string name="version_code">版本号</string>
+    <string name="min_sdk_version">最低 SDK 版本</string>
+    <string name="target_sdk_version">目标 SDK 版本</string>
+    <string name="signature">签名</string>
+    <string name="md5">MD5</string>
+    <string name="sha1">SHA1</string>
+    <string name="sha256">SHA256</string>
+    <string name="user_apps">用户程序</string>
+    <string name="system_apps">系统程序</string>
+    <string name="open">打开</string>
+    <string name="system_detail">系统详情</string>
+    <string name="empty_apps">未找到应用</string>
+</resources>
