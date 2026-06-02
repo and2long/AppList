@@ -1,32 +1,72 @@
 name: Release CI
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: write
+
 jobs:
   build-and-release:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: set up JDK 11
-      uses: actions/setup-java@v3
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v5
       with:
-        java-version: '11'
+        java-version: '21'
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
-    
-    - name: Release
-      uses: softprops/action-gh-release@v1
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v4
+
+    - name: Build release APK
+      run: ./gradlew --no-daemon :applist:assembleRelease
+
+    - name: Rename release APK
+      run: |
+        cp applist/build/outputs/apk/release/applist-release.apk \
+          "applist/build/outputs/apk/release/applist-release-${{ github.ref_name }}.apk"
+
+    - name: Extract changelog
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        REF_NAME: ${{ github.ref_name }}
+      run: |
+        VERSION="${REF_NAME#v}"
+        awk -v version="$VERSION" '
+          index($0, "## [" version "] - ") == 1 || index($0, "## [" version "+") == 1 {
+            found = 1
+            next
+          }
+          found && /^## \[/ {
+            exit
+          }
+          found {
+            print
+          }
+          END {
+            if (!found) {
+              exit 1
+            }
+          }
+        ' CHANGELOG.md > release-notes.md
+        if [ ! -s release-notes.md ]; then
+          echo "No changelog entries found for $VERSION"
+          exit 1
+        fi
+
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v3
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        body_path: CHANGELOG.md
-        files: './applist/build/outputs/apk/release/applist-release-${{  github.ref_name }}.apk'
+        body_path: release-notes.md
+        files: "applist/build/outputs/apk/release/applist-release-${{ github.ref_name }}.apk"
+        fail_on_unmatched_files: true
