@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -66,7 +67,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                     .setMessage("PackageName: " + appInfo.packageName + "\n\n" + "VersionName: " + appInfo.versionName + "\n\nVersionCode: " + appInfo.versionCode)
                     .setPositiveButton("OPEN") { dialog, _ ->
                         dialog?.dismiss()
-                        startActivity(packageManager.getLaunchIntentForPackage(appInfo.packageName))
+                        packageManager.getLaunchIntentForPackage(appInfo.packageName)?.let(::startActivity)
                     }
                     .setNegativeButton("DETAIL") { dialog, _ ->
                         dialog?.dismiss()
@@ -120,11 +121,17 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                     val packageInfoList = packageManager.getInstalledPackages(0)
                     val temp = when (type) {
                         TYPE_SYSTEM -> {
-                            packageInfoList.filter { (ApplicationInfo.FLAG_SYSTEM and it.applicationInfo.flags) != 0 }
+                            packageInfoList.filter {
+                                val applicationInfo = it.applicationInfo ?: return@filter false
+                                (ApplicationInfo.FLAG_SYSTEM and applicationInfo.flags) != 0
+                            }
                         }
 
                         TYPE_USER -> {
-                            packageInfoList.filter { (ApplicationInfo.FLAG_SYSTEM and it.applicationInfo.flags) == 0 }
+                            packageInfoList.filter {
+                                val applicationInfo = it.applicationInfo ?: return@filter false
+                                (ApplicationInfo.FLAG_SYSTEM and applicationInfo.flags) == 0
+                            }
                         }
 
                         else -> {
@@ -133,14 +140,20 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                     }
 
                     temp.forEach {
+                        val applicationInfo = it.applicationInfo ?: return@forEach
                         if (it.packageName != packageName) {
                             val appInfo = AppInfo()
                             appInfo.appName =
-                                packageManager.getApplicationLabel(it.applicationInfo).toString()
+                                packageManager.getApplicationLabel(applicationInfo).toString()
                             appInfo.packageName = it.packageName
-                            appInfo.versionName = it.versionName
-                            appInfo.versionCode = it.versionCode.toString()
-                            appInfo.appIcon = it.applicationInfo.loadIcon(packageManager)
+                            appInfo.versionName = it.versionName.orEmpty()
+                            appInfo.versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                it.longVersionCode.toString()
+                            } else {
+                                @Suppress("DEPRECATION")
+                                it.versionCode.toString()
+                            }
+                            appInfo.appIcon = applicationInfo.loadIcon(packageManager)
                             result.add(appInfo)
                         }
                     }
