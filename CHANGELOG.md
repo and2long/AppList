@@ -1,3 +1,6 @@
+## [2.0.3+14] - 2026-06-03
+- Add multi-select uninstall support for user apps
+
 ## [2.0.2+13] - 2026-06-03
 - Treat updated system apps as system apps in app filters
 

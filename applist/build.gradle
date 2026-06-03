@@ -15,8 +15,8 @@ android {
         applicationId "com.and2long.applist"
         minSdkVersion 23
         targetSdkVersion 37
-        versionCode 13
-        versionName "2.0.2"
+        versionCode 14
+        versionName "2.0.3"
     }
     buildTypes {
         release {
