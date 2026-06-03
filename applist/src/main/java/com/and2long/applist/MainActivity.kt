@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     AppFilter.SYSTEM -> {
                         packageInfoList.filter {
                             val applicationInfo = it.applicationInfo ?: return@filter false
-                            applicationInfo.isSystemApp() && !applicationInfo.isUpdatedSystemApp()
+                            applicationInfo.isSystemApp()
                         }
                     }
 
@@ -131,15 +131,19 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun ApplicationInfo.isUserApp(): Boolean {
-        return !isSystemApp() || isUpdatedSystemApp()
+        return !isSystemApp()
     }
 
     private fun ApplicationInfo.isSystemApp(): Boolean {
-        return (flags and ApplicationInfo.FLAG_SYSTEM) != 0
+        return hasSystemFlag() || isUpdatedSystemApp()
     }
 
     private fun ApplicationInfo.isUpdatedSystemApp(): Boolean {
         return (flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
+    }
+
+    private fun ApplicationInfo.hasSystemFlag(): Boolean {
+        return (flags and ApplicationInfo.FLAG_SYSTEM) != 0
     }
 
     private fun signatureDigests(packageName: String): SignatureDigests {
