@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
@@ -22,11 +23,19 @@ import java.util.Date
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
 
     private var refreshToken by mutableIntStateOf(0)
     private val tag = this.javaClass.simpleName
+    private val uninstallQueue = ArrayDeque<String>()
+    private val uninstallLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        uninstallNextPackage()
+        refreshToken++
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +47,8 @@ class MainActivity : ComponentActivity() {
                     onLoadApps = ::loadApps,
                     onOpenApp = ::openApp,
                     onOpenDetail = ::goToAppDetail,
-                    onShareApp = ::shareAppInfo
+                    onShareApp = ::shareAppInfo,
+                    onUninstallApps = ::uninstallApps
                 )
             }
         }
@@ -207,11 +217,38 @@ class MainActivity : ComponentActivity() {
     private fun goToAppDetail(packageName: String) {
         try {
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.parse("package:$packageName")
+                data = "package:$packageName".toUri()
             }
             startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun uninstallApps(packageNames: List<String>) {
+        uninstallQueue.clear()
+        uninstallQueue.addAll(
+            packageNames
+                .filterNot { it == packageName }
+                .distinct()
+        )
+        uninstallNextPackage()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun uninstallNextPackage() {
+        val packageName = uninstallQueue.removeFirstOrNull() ?: return
+        try {
+            val intent = Intent(
+                Intent.ACTION_UNINSTALL_PACKAGE,
+                Uri.fromParts("package", packageName, null)
+            ).apply {
+                putExtra(Intent.EXTRA_RETURN_RESULT, true)
+            }
+            uninstallLauncher.launch(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            uninstallNextPackage()
         }
     }
 

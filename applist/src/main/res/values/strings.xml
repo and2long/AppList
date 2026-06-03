@@ -17,5 +17,16 @@
     <string name="open">Open</string>
     <string name="system_detail">System Detail</string>
     <string name="share">Share</string>
+    <string name="cancel">Cancel</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="uninstall_confirm_title">Uninstall selected apps?</string>
     <string name="empty_apps">No apps found</string>
+    <plurals name="selected_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <plurals name="uninstall_confirm_message">
+        <item quantity="one">The selected app will be uninstalled.</item>
+        <item quantity="other">The %1$d selected apps will be uninstalled.</item>
+    </plurals>
 </resources>

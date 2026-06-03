@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -25,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.and2long.applist.AppInfo
@@ -43,17 +45,29 @@ fun AppListScreen(
     onLoadApps: suspend (Int) -> List<AppInfo>,
     onOpenApp: (String) -> Unit,
     onOpenDetail: (String) -> Unit,
-    onShareApp: (AppInfo) -> Unit
+    onShareApp: (AppInfo) -> Unit,
+    onUninstallApps: (List<String>) -> Unit
 ) {
     var selectedType by remember { mutableIntStateOf(AppFilter.USER) }
     var apps by remember { mutableStateOf(emptyList<AppInfo>()) }
     var isLoading by remember { mutableStateOf(true) }
-    var selectedApp by remember { mutableStateOf<AppInfo?>(null) }
+    val selectedApp = remember { mutableStateOf<AppInfo?>(null) }
+    var selectedPackageNames by remember { mutableStateOf(emptySet<String>()) }
+    val showUninstallConfirmDialog = remember { mutableStateOf(false) }
+    val isSelectionMode = selectedPackageNames.isNotEmpty()
 
-    selectedApp?.let { appInfo ->
+    fun toggleSelection(packageName: String) {
+        selectedPackageNames = if (packageName in selectedPackageNames) {
+            selectedPackageNames - packageName
+        } else {
+            selectedPackageNames + packageName
+        }
+    }
+
+    selectedApp.value?.let { appInfo ->
         AppDetailScreen(
             appInfo = appInfo,
-            onBack = { selectedApp = null },
+            onBack = { selectedApp.value = null },
             onOpenApp = { onOpenApp(appInfo.packageName) },
             onOpenSystemDetail = { onOpenDetail(appInfo.packageName) },
             onShare = { onShareApp(appInfo) }
@@ -61,23 +75,71 @@ fun AppListScreen(
         return
     }
 
-    LaunchedEffect(selectedType, refreshToken) {
-        isLoading = true
-        apps = onLoadApps(selectedType)
-        isLoading = false
+    if (showUninstallConfirmDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showUninstallConfirmDialog.value = false },
+            title = { Text(text = stringResource(R.string.uninstall_confirm_title)) },
+            text = {
+                Text(
+                    text = pluralStringResource(
+                        R.plurals.uninstall_confirm_message,
+                        selectedPackageNames.size,
+                        selectedPackageNames.size
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val packageNamesToUninstall = selectedPackageNames.toList()
+                        showUninstallConfirmDialog.value = false
+                        onUninstallApps(packageNamesToUninstall)
+                        selectedPackageNames = emptySet()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.uninstall))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUninstallConfirmDialog.value = false }) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = stringResource(R.string.app_name)) },
-                actions = {
-                    AppTypeDropdown(
-                        selectedType = selectedType,
-                        onSelected = { selectedType = it }
+                title = {
+                    Text(
+                        text = if (isSelectionMode) {
+                            pluralStringResource(
+                                R.plurals.selected_count,
+                                selectedPackageNames.size,
+                                selectedPackageNames.size
+                            )
+                        } else {
+                            stringResource(R.string.app_name)
+                        }
                     )
-                    TextButton(onClick = onRefresh) {
-                        Text(text = stringResource(R.string.refresh))
+                },
+                actions = {
+                    if (isSelectionMode) {
+                        TextButton(onClick = { selectedPackageNames = emptySet() }) {
+                            Text(text = stringResource(R.string.cancel))
+                        }
+                        TextButton(onClick = { showUninstallConfirmDialog.value = true }) {
+                            Text(text = stringResource(R.string.uninstall))
+                        }
+                    } else {
+                        AppTypeDropdown(
+                            selectedType = selectedType,
+                            onSelected = { selectedType = it }
+                        )
+                        TextButton(onClick = onRefresh) {
+                            Text(text = stringResource(R.string.refresh))
+                        }
                     }
                 }
             )
@@ -103,7 +165,16 @@ fun AppListScreen(
                 items(apps, key = { it.packageName }) { appInfo ->
                     AppInfoRow(
                         appInfo = appInfo,
-                        onClick = { selectedApp = appInfo }
+                        isSelectionMode = isSelectionMode,
+                        isSelected = appInfo.packageName in selectedPackageNames,
+                        onClick = {
+                            if (isSelectionMode) {
+                                toggleSelection(appInfo.packageName)
+                            } else {
+                                selectedApp.value = appInfo
+                            }
+                        },
+                        onLongClick = { toggleSelection(appInfo.packageName) }
                     )
                     HorizontalDivider()
                 }
@@ -113,6 +184,13 @@ fun AppListScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
+    }
+
+    LaunchedEffect(selectedType, refreshToken) {
+        isLoading = true
+        apps = onLoadApps(selectedType)
+        selectedPackageNames = emptySet()
+        isLoading = false
     }
 }
 
