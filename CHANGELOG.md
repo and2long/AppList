@@ -1,3 +1,6 @@
+## [2.0.2+13] - 2026-06-03
+- Treat updated system apps as system apps in app filters
+
 ## [2.0.1+12] - 2026-06-02
 - Fix missing updated system apps in the user app list
 - Sort app lists by last update time in descending order
