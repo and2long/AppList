@@ -25,6 +25,10 @@
         <item quantity="one">%1$d selected</item>
         <item quantity="other">%1$d selected</item>
     </plurals>
+    <plurals name="app_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
     <plurals name="uninstall_confirm_message">
         <item quantity="one">The selected app will be uninstalled.</item>
         <item quantity="other">The %1$d selected apps will be uninstalled.</item>

@@ -24,6 +24,9 @@
     <plurals name="selected_count">
         <item quantity="other">已选择 %1$d 项</item>
     </plurals>
+    <plurals name="app_count">
+        <item quantity="other">%1$d 个程序</item>
+    </plurals>
     <plurals name="uninstall_confirm_message">
         <item quantity="other">将卸载选中的 %1$d 个软件。</item>
     </plurals>

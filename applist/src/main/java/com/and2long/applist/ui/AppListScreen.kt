@@ -120,7 +120,7 @@ fun AppListScreen(
                                 selectedPackageNames.size
                             )
                         } else {
-                            stringResource(R.string.app_name)
+                            pluralStringResource(R.plurals.app_count, apps.size, apps.size)
                         }
                     )
                 },
