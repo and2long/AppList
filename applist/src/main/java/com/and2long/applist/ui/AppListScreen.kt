@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +52,7 @@ fun AppListScreen(
     var selectedType by remember { mutableIntStateOf(AppFilter.USER) }
     var apps by remember { mutableStateOf(emptyList<AppInfo>()) }
     var isLoading by remember { mutableStateOf(true) }
+    var isRefreshing by remember { mutableStateOf(false) }
     val selectedApp = remember { mutableStateOf<AppInfo?>(null) }
     var selectedPackageNames by remember { mutableStateOf(emptySet<String>()) }
     val showUninstallConfirmDialog = remember { mutableStateOf(false) }
@@ -137,15 +139,19 @@ fun AppListScreen(
                             selectedType = selectedType,
                             onSelected = { selectedType = it }
                         )
-                        TextButton(onClick = onRefresh) {
-                            Text(text = stringResource(R.string.refresh))
-                        }
                     }
                 }
             )
         }
     ) { innerPadding ->
-        Box(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                if (!isLoading) {
+                    isRefreshing = true
+                    onRefresh()
+                }
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -191,6 +197,7 @@ fun AppListScreen(
         apps = onLoadApps(selectedType)
         selectedPackageNames = emptySet()
         isLoading = false
+        isRefreshing = false
     }
 }
 

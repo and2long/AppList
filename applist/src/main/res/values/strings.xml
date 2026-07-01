@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">AppList</string>
-    <string name="refresh">Refresh</string>
     <string name="package_name">Package Name</string>
     <string name="version_name">Version Name</string>
     <string name="version_code">Version Code</string>

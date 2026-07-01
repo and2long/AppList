@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">AppList</string>
-    <string name="refresh">刷新</string>
     <string name="package_name">包名</string>
     <string name="version_name">版本名称</string>
     <string name="version_code">版本号</string>

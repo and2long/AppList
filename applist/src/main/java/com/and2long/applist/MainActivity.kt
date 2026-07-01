@@ -89,35 +89,33 @@ class MainActivity : ComponentActivity() {
 
                 filteredPackages.forEach {
                     val applicationInfo = it.applicationInfo ?: return@forEach
-                    if (it.packageName != packageName) {
-                        val signatureDigests = signatureDigests(it.packageName)
-                        result.add(
-                            it.lastUpdateTime to
-                                AppInfo(
-                                    appName = packageManager.getApplicationLabel(applicationInfo).toString(),
-                                    packageName = it.packageName,
-                                    versionName = it.versionName.orEmpty(),
-                                    versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                        it.longVersionCode.toString()
-                                    } else {
-                                        @Suppress("DEPRECATION")
-                                        it.versionCode.toString()
-                                    },
-                                    firstInstallTime = formatPackageTime(it.firstInstallTime),
-                                    lastUpdateTime = formatPackageTime(it.lastUpdateTime),
-                                    minSdkVersion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        applicationInfo.minSdkVersion.toString()
-                                    } else {
-                                        "-"
-                                    },
-                                    targetSdkVersion = applicationInfo.targetSdkVersion.toString(),
-                                    signatureMd5 = signatureDigests.md5,
-                                    signatureSha1 = signatureDigests.sha1,
-                                    signatureSha256 = signatureDigests.sha256,
-                                    appIcon = applicationInfo.loadIcon(packageManager)
-                                )
+                    val signatureDigests = signatureDigests(it.packageName)
+                    result.add(
+                        it.lastUpdateTime to
+                            AppInfo(
+                                appName = packageManager.getApplicationLabel(applicationInfo).toString(),
+                                packageName = it.packageName,
+                                versionName = it.versionName.orEmpty(),
+                                versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                    it.longVersionCode.toString()
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    it.versionCode.toString()
+                                },
+                                firstInstallTime = formatPackageTime(it.firstInstallTime),
+                                lastUpdateTime = formatPackageTime(it.lastUpdateTime),
+                                minSdkVersion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    applicationInfo.minSdkVersion.toString()
+                                } else {
+                                    "-"
+                                },
+                                targetSdkVersion = applicationInfo.targetSdkVersion.toString(),
+                                signatureMd5 = signatureDigests.md5,
+                                signatureSha1 = signatureDigests.sha1,
+                                signatureSha256 = signatureDigests.sha256,
+                                appIcon = applicationInfo.loadIcon(packageManager)
                             )
-                    }
+                    )
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -229,7 +227,6 @@ class MainActivity : ComponentActivity() {
         uninstallQueue.clear()
         uninstallQueue.addAll(
             packageNames
-                .filterNot { it == packageName }
                 .distinct()
         )
         uninstallNextPackage()
