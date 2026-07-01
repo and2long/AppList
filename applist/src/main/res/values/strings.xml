@@ -20,6 +20,8 @@
     <string name="uninstall">Uninstall</string>
     <string name="uninstall_confirm_title">Uninstall selected apps?</string>
     <string name="empty_apps">No apps found</string>
+    <string name="search">Search</string>
+    <string name="close_search">Close search</string>
     <plurals name="selected_count">
         <item quantity="one">%1$d selected</item>
         <item quantity="other">%1$d selected</item>

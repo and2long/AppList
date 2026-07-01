@@ -20,6 +20,8 @@
     <string name="uninstall">卸载</string>
     <string name="uninstall_confirm_title">卸载选中的应用？</string>
     <string name="empty_apps">未找到应用</string>
+    <string name="search">搜索</string>
+    <string name="close_search">关闭搜索</string>
     <plurals name="selected_count">
         <item quantity="other">已选择 %1$d 项</item>
     </plurals>
