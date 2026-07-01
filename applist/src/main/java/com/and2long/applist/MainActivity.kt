@@ -64,6 +64,7 @@ class MainActivity : ComponentActivity() {
             val result = mutableListOf<Pair<Long, AppInfo>>()
             try {
                 val packageInfoList = getInstalledPackages()
+                logAppCounts(packageInfoList.mapNotNull { it.applicationInfo })
                 val filteredPackages = when (type) {
                     AppFilter.SYSTEM -> {
                         packageInfoList.filter {
@@ -140,6 +141,17 @@ class MainActivity : ComponentActivity() {
 
     private fun ApplicationInfo.isUserApp(): Boolean {
         return !isSystemApp()
+    }
+
+    private fun logAppCounts(applicationInfoList: List<ApplicationInfo>) {
+        val updatedSystemAppCount = applicationInfoList.count { it.isUpdatedSystemApp() }
+        val systemAppCount = applicationInfoList.count { it.isSystemApp() }
+        val userAppCount = applicationInfoList.count { it.isUserApp() }
+
+        Log.i(
+            tag,
+            "应用统计: 系统应用 $systemAppCount, 更新过的系统应用 $updatedSystemAppCount, 用户程序 $userAppCount"
+        )
     }
 
     private fun ApplicationInfo.isSystemApp(): Boolean {
