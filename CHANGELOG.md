@@ -1,3 +1,8 @@
+## [2.0.4+15] - 2026-07-29
+- Add toolbar search and app counts
+- Replace the refresh button with pull-to-refresh
+- Include AppList itself in the app list
+
 ## [2.0.3+14] - 2026-06-03
 - Add multi-select uninstall support for user apps
 
